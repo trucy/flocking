@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>untitled</title>
+	<meta name="generator" content="TextMate http://macromates.com/">
+	<meta name="author" content="Trucy Phan">
+	<!-- Date: 2012-08-14 -->
+	<style>
+		.button {
+			float: left;
+			border: 1px solid;
+			cursor: pointer;
+			background: #4B75B6;
+			color: #fff;
+			padding: 20px 40px;
+			margin: 10px;
+			border: none;
+		}
+		
+		circle {
+	  	stroke: #000;
+	  	stroke-opacity: .5;
+		}
+	</style>
+</head>
+<script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
+<script type = "text/javascript">
+	function vector(x,y) {
+		this.xx = x;
+		this.yy = y;
+	}
+	
+	function sum(arr) {
+		return arr.reduce(function(a, b) { return a + b; });
+	}
+	
+	function bird(p,v) {
+		this.p = p;
+		this.v = v;
+	}
+	
+	function mean(arr) {
+		return sum(arr)/arr.length;
+	}
+
+	function vectorMean(arr) {
+		var px = arr.map(function(e){return e.xx});
+		var py = arr.map(function(e){return e.yy});
+		return new vector(mean(px),mean(py));
+	}
+
+	// debugging ////////////////////////////////////////////////////////
+
+	var a = new vector(5,9);
+	var b = new vector(5,3);
+	var c = new vector(2,1);
+	var vectArr = [a,b,c];
+	var vectMean = vectorMean(vectArr);
+	console.log(vectMean);
+
+	/////////////////////////////////////////////////////////////////////
+
+</script>
+
+<body>
+	
+	<div id="body"></div>
+	
+	<script type="text/javascript">
+
+	var w = 1200,
+	    h = 300;
+
+	var nodes = d3.range(4).map(function() { 
+		return {
+			radius: Math.random() * 12 + 4, 
+			x: 20, 
+			y: 20}; 
+			}),
+	    color = d3.scale.category10();
+
+	var root = nodes[0];
+	root.radius = 0;
+	root.fixed = true;
+
+	var svg = d3.select("#body").append("svg:svg")
+	    .attr("width", w)
+	    .attr("height", h)
+			.attr("style", 'background-color: #f1f1f1');
+
+	svg.selectAll("circle")
+	    .data(nodes.slice(1))
+	  .enter().append("svg:circle")
+	    .attr("r", function(d) { 
+					return 5;
+					// return d.radius - 2; 
+				})
+	    .style("fill", function(d, i) { return color(i % 5); });
+
+			// random starting position
+	  	svg.selectAll("circle")
+				.attr("vel", function(d, i){
+					return [Math.random()*10, Math.random()*10];
+				})
+				.attr("id", function(d, i){
+					return i;
+				})
+	      .attr("cx", function(d) { 
+					d.x = Math.random()*200 + 40;
+					return d.x;
+				})
+	      .attr("cy", function(d) { 
+					d.y = Math.random()*200 + 40;
+					return d.y;
+				});
+
+			function start() { 
+				e = setInterval(function(){
+
+				flock();
+
+				svg.selectAll("circle")
+					.attr("cx", function(d){ 
+						
+						// properties of this: "vel" = [float, float], "id" = int, "cy" = float, "cx" = float;
+						if(d.x < 1000) {
+							if(this.id == 8) {
+								d.x += 40;
+							}
+							else {d.x = move(d).x;}
+													
+						}	
+						else {
+							 							
+						}
+				
+						return d.x; 
+					})
+//					.attr("cy", function(d){
+//						d.y = move(d).y;
+//						return d.y;
+//				})   
+
+			}, 200);
+		}
+					
+			function stop() {
+				clearInterval(e);
+			}
+			
+			function move(data) {				
+				data.x += Math.random()*20;
+				data.y += Math.random()*20;
+				return data;
+			}
+			
+			function flock() {
+				
+				
+	//			console.log(nodes[9].x);
+	//			console.log(nodes[9].y);
+			}				
+	    
+	</script>
+
+<div id="start" class="button" onclick="start()">Start</div>
+<div id="stop" class="button" onclick="stop()">Stop</div>
+
+</body>
+</html>
