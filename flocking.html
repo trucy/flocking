@@ -21,12 +21,11 @@
 		}
 		
 		circle {
-	  	stroke: #000;
-	  	stroke-opacity: .5;
+
 		}
 	</style>
 </head>
-<script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
+<script type="text/javascript" src="js/d3.v2.min.js"></script>
 <script type = "text/javascript">
 	
 	function point(x,y) {
@@ -60,7 +59,22 @@
 	
 		return new point(mean(xValues),mean(yValues));
 	}
+	
+	function velocityMean(nodes) {
+		var xValues = [];
+		nodes.forEach(function(xVal) {
+			xValues.push(xVal.vx);
+		});
 
+		var yValues = [];
+		nodes.forEach(function(yVal) {
+			yValues.push(yVal.vy);
+		});
+	
+		return new point(mean(xValues),mean(yValues));
+		
+	}
+	
 </script>
 
 <body>
@@ -80,11 +94,12 @@
 	var step = 10;
 	
 
-	var w = 1200,
+	var w = '100%',
 	    h = 300;
 
-	var nodes = d3.range(10).map(function() { 
+	var nodes = d3.range(15).map(function() { 
 		return {
+			id: 0,
 			radius: Math.random() * 12 + 4, 
 			x: 20, 
 			y: 20}; 
@@ -112,15 +127,21 @@
 	svg.selectAll("circle")
 		.data(nodes.slice(0,1))
 			.attr("r", function(d){return 10;})
-			.style("fill", "black");
+			.attr("style", 'fill: #f1f1f1')
 		
 		// random starting position
 	 svg.selectAll("circle")
-		.attr("vel", function(d, i){
-			return [Math.random()*10, Math.random()*10];
+		.attr("vx", function(d, i){
+			d.vx = [Math.random()*10, Math.random()*10];
+			return d.vx;
 		})
+		.attr("vy", function(d, i){
+			d.vy = [Math.random()*10, Math.random()*10];
+			return d.vy;
+		})		
 		.attr("id", function(d, i){
-			return i;
+			d.id = i;
+			return d.id;
 		})
 	  .attr("cx", function(d) { 
 			d.x = Math.random()*200 + 40;
@@ -139,22 +160,27 @@
 			svg.selectAll("circle")
 				.data(nodes.slice(1))
 				.attr("cx", function(d) { 
-					if(d.x < 1000) {
-	//					if(this.id == 8) { d.x += 40; }
-						d.x = cohere(d).x;							
-					}	
-					else {}	
+
+					var cohereVector = cohere(d);
+					var separateVector = separate(d);
+					
+					d.x += cohereVector.xx + separateVector.xx;
+					
 					return d.x; 
 				} ) // end .attr
 				.attr("cy", function(d){
-					d.y = cohere(d).y;
+					var cohereVector = cohere(d);
+					var separateVector = separate(d);
+					d.y += cohereVector.yy + separateVector.yy;
+					
 					return d.y;
-				})   
+				})
 
+				// black dot
 				svg.selectAll("circle")
 					.data(nodes.slice(0,1))
 					.attr("cx", function(d) {
-						d.x += 15;
+						d.x += 20;
 						return d.x;
 					})
 					.attr("cy", function(d) {
@@ -162,27 +188,54 @@
 						return d.y;
 					})
 
-			}, 200); // end setInterval
+			}, 5); // end setInterval
 		} // end start function
 					
 			function stop() {
 				clearInterval(e);
 			}
 			
-			function separate() {
+			function separate(data) {
+				// for each node, calculate distance between it and neighbors and store in array
+				// filter the object and grab the velocity vectors from the close ones
+				var vecMove = [];
+				var distArr = [];
+				var moveX = 0;
+				var moveY = 0;
+				var c = nodes.filter(function(el){ return el !== data; });
+				c.forEach(function(point){
+					distArr[point.id] = dist(data.x,data.y,point.x,point.y);
+					if( distArr[point.id] <= 50 ) {
+						moveX = moveX - (point.x - data.x)/distArr[point.id];
+						moveY = moveY - (point.y - data.y)/distArr[point.id];
+					}
+					else {
+						// do nothing
+					}
+				}); // end for each
+					distArr[data.id] = 0;
+	//				console.log(distArr);
+					var vecMove = new point(moveX,moveY);					
+					return vecMove;
 				
 			}
 			
-			function align() {
+			function align(data) {
+				// sum all of the velocity vectors and add that one to the velocity vector of the moving
 				
+/*				var velSum = velocityMean(nodes);
+				data.x += velSum[0];
+				data.y += velSum[1];
+				return data */
 			}
 			
 			function cohere(data) {
 				var centerPoint = vectorMean(nodes);
 				var c = dist(data.x,data.y,centerPoint.xx,centerPoint.yy);
-				data.x += 10*(centerPoint.xx - data.x)/c;
-				data.y += 10*(centerPoint.yy - data.y)/c;
-				return data				
+				var moveX = (centerPoint.xx - data.x)/c;
+				var moveY = (centerPoint.yy - data.y)/c;
+				var vecMove = new point(moveX,moveY);
+				return vecMove
 			}
 			
 			function move(data) {
@@ -190,7 +243,15 @@
 				return data;
 			} // end move function
 			
-			function flock() {					
+			function flock(data) {
+				// align
+				
+				// cohere
+				
+				// separate
+				
+				
+									
 				// console.log(nodes[9].x);
 				// console.log(nodes[9].y);
 			}				
